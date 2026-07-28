@@ -33,3 +33,8 @@ $(OBJDIR)/%.o: $(COMMONDIR)/%.cpp
 
 $(OBJDIR)/main.o: $(COMMONDIR)/CycleTimer.h
 
+.PHONY: test
+
+test:
+	./test_2_to_30_threads.sh
+

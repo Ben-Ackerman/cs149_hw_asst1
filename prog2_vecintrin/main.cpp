@@ -214,12 +214,7 @@ void absVector(float* values, float* output, int N) {
   }
 }
 
-
-// accepts an array of values and an array of exponents
-//
-// For each element, compute values[i]^exponents[i] and clamp value to
-// 9.999.  Store result in output.
-void clampedExpSerial(float* values, int* exponents, float* output, int N) {
+void clampedExpSerialHelper(float* values, int* exponents, float* output, int start, int N) {
   for (int i=0; i<N; i++) {
     float x = values[i];
     int y = exponents[i];
@@ -240,8 +235,15 @@ void clampedExpSerial(float* values, int* exponents, float* output, int N) {
   }
 }
 
-void clampedExpVector(float* values, int* exponents, float* output, int N) {
+// accepts an array of values and an array of exponents
+//
+// For each element, compute values[i]^exponents[i] and clamp value to
+// 9.999.  Store result in output.
+void clampedExpSerial(float* values, int* exponents, float* output, int N) {
+  clampedExpSerialHelper(values, exponents, output, 0, N);
+}
 
+void clampedExpVector(float* values, int* exponents, float* output, int N) {
   //
   // CS149 STUDENTS TODO: Implement your vectorized version of
   // clampedExpSerial() here.
@@ -249,6 +251,56 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // Your solution should work for any value of
   // N and VECTOR_WIDTH, not just when VECTOR_WIDTH divides N
   //
+
+  //std::printf("x = [%f, %f, %f, %f]\n", x.value[0], x.value[1], x.value[2], x.value[3]);
+  // std::printf("y = [%d, %d, %d, %d]\n", y.value[0], y.value[1], y.value[2], y.value[3]);
+
+  __cs149_vec_int zeros = _cs149_vset_int(0);
+  __cs149_vec_int ones = _cs149_vset_int(1);
+  __cs149_mask all_lanes = _cs149_init_ones();
+  for (int i = 0; i + VECTOR_WIDTH - 1 < N; i += VECTOR_WIDTH) {
+    __cs149_mask inactive_lanes = _cs149_init_ones();
+    __cs149_mask active_lanes = _cs149_init_ones();
+
+    // If y < 0 load 1 into x
+    __cs149_vec_int y;
+    _cs149_vload_int(y, exponents+i, all_lanes);
+    _cs149_vlt_int(inactive_lanes, y, ones, active_lanes);
+    active_lanes = _cs149_mask_not(inactive_lanes);
+
+    __cs149_vec_float x = _cs149_vset_float(1);
+    __cs149_vec_float result = _cs149_vset_float(1);
+    _cs149_vload_float(x, values+i, active_lanes);
+
+    _cs149_vmove_float(result, x, all_lanes);
+    _cs149_vsub_int(y, y, ones, active_lanes);
+
+    _cs149_vlt_int(inactive_lanes, y, ones, active_lanes);
+    active_lanes = _cs149_mask_not(inactive_lanes);
+    while (_cs149_cntbits(active_lanes) > 0) {
+      // result = result * x
+      _cs149_vmult_float(result, result, x, active_lanes);
+
+      // y = y - 1
+      _cs149_vsub_int(y, y, ones, active_lanes);
+
+      // Update active lanes for y > 0
+      _cs149_vlt_int(inactive_lanes, y, ones, active_lanes);
+      active_lanes = _cs149_mask_not(inactive_lanes);
+    }
+
+    // Clamp on values of x greater than 9.999999f
+    __cs149_vec_float nines = _cs149_vset_float(9.999999f);
+    __cs149_mask clampResult;
+    _cs149_vgt_float(clampResult, result, nines, all_lanes);
+    _cs149_vset_float(result, 9.999999f , clampResult);
+
+    // Store output
+    _cs149_vstore_float(output+i, result, all_lanes);
+  }
+
+  // Not needed if we are guaranteed that N is a multiple of vector width
+  // clampedExpSerialHelper(values, exponents, output, i, N);
   
 }
 
@@ -270,11 +322,23 @@ float arraySumVector(float* values, int N) {
   //
   // CS149 STUDENTS TODO: Implement your vectorized version of arraySumSerial here
   //
-  
-  for (int i=0; i<N; i+=VECTOR_WIDTH) {
-
+  if (N == 0) {
+    return 0.0;
   }
 
-  return 0.0;
+  __cs149_mask all_lanes = _cs149_init_ones();
+  __cs149_vec_float result = _cs149_vset_float(0);
+  for (int i=0; i<N; i+=VECTOR_WIDTH) {
+    __cs149_vec_float x;
+    _cs149_vload_float(x, values+i, all_lanes);
+    _cs149_vadd_float(result, result, x, all_lanes);
+  }
+
+  for (int j = 2; j <= VECTOR_WIDTH; j *= 2) {
+    _cs149_hadd_float(result, result);
+    _cs149_interleave_float(result, result);
+  }
+
+  return result.value[0];
 }
 

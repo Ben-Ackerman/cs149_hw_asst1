@@ -31,13 +31,13 @@ To get started:
 Download the linux binary into a local directory of your choice. You can get ISPC compiler binaries for Linux from the ISPC [downloads page](https://ispc.github.io/downloads.html). For macOS, we recommend you use `curl` or `wget` (if not found, a quick Google search can provide information on how to get these tools locally) to directly download the binary from the downloads page. As of Fall 2025 Week 1, the `wget` line below works:
 
 
-    wget https://github.com/ispc/ispc/releases/download/v1.28.1/ispc-v1.28.1-MacOS.tar.gz
+    wget https://github.com/ispc/ispc/releases/download/v1.30.0/ispc-v1.30.0-macOS.arm64.tar.gz
 
-Untar the downloaded file: `tar -xvf ispc-v1.28.1-MacOS.tar.gz`
+Untar the downloaded file: `tar -xvf ispc-v1.30.0-macOS.arm64.tar.gz`
 
 Add the ISPC `bin` directory to your system path.  For example, if untarring the downloaded file produces the directory `~/Downloads/ispc-v1.28.1-MacOS`, in bash you'd update your path variable with:
 
-    export PATH=$PATH:${HOME}/Downloads/ispc-v1.28.1-MacOS/bin
+    export PATH=$PATH:${HOME}/Downloads/ispc-v1.30.0-macOS.arm64/bin
 
 
 The above line can be added to your `.bashrc` file for permanence.
@@ -89,8 +89,7 @@ You will not need to make use of any other std::thread API calls in this assignm
   the beginning and end of `workerThreadStart()`. How do your measurements
   explain the speedup graph you previously created?
 4.  Modify the mapping of work to threads to improve speedup as much as possible on the Mandelbrot set. 
-  You may not use any
-  synchronization between threads in your solution. We are expecting you to come up with a single work decomposition policy that will work well for all thread counts---hard coding a solution specific to each configuration is not allowed! (Hint: There is a very simple static
+  You may not use any synchronization between threads in your solution. We are expecting you to come up with a single work decomposition policy that will work well for all thread counts---hard coding a solution specific to each configuration is not allowed! (Hint: There is a very simple static
   assignment that will achieve this goal, and no communication/synchronization
   among threads is necessary.). In your writeup, describe your approach to parallelization
   and report the final 8-thread speedup obtained with the same number of threads as the number of performance CPU cores your machine has. 
