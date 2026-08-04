@@ -34,7 +34,18 @@ int main() {
         // to you generate best and worse-case speedups
         
         // starter code populates array with random input values
-        values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
+        // values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
+
+        // Worst
+        if (i % 8 == 0) {
+            values[i] = 0.00000000000001f;
+        } else {
+            values[i] = 1;
+        }
+
+        // Best, small values so lots of loops to find approximation all lanes active for same number of loops
+        //values[i] = 0.00000000000001f;
+
     }
 
     // generate a gold version to check results
